@@ -14,17 +14,14 @@ import com.example.core.LocalThemeColors
 import com.example.core.PortugalTeamsButton
 
 @Composable
-fun FeatureScreen(modifier: Modifier = Modifier) {
+fun FeatureScreen(modifier: Modifier = Modifier, stringsResourceProvider: FeatureStringsResourceProvider) {
     val backgroundColor = LocalThemeColors.current.background
 
     Box(
         modifier = Modifier.fillMaxSize().padding(16.dp).background(color = backgroundColor),
         contentAlignment = Alignment.Center,
     ) {
-        PortugalTeamsButton(onClick = { }, text = "Click Here")
-
-
-
+        PortugalTeamsButton(onClick = { }, text = stringsResourceProvider.getButtonTitle())
     }
 }
 

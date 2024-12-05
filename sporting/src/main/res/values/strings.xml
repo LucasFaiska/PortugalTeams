@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">sporting</string>
+    <string name="button_title">Sporting Button</string>
 </resources>
