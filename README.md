@@ -1,4 +1,4 @@
-# PortugalTeams — Whitelabel Multi-Theming Architecture Lab
+# PortugalTeams — Whitelabel Multi-Theming
 
 A system design laboratory for Whitelabel Apps in Jetpack Compose. This repository demonstrates a composable, tenant-agnostic theming architecture using Portuguese football clubs as the domain example.
 
