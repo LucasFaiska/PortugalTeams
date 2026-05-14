@@ -6,20 +6,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.example.core.AppTheme
 import com.example.feature.FeatureScreen
-import com.example.feature.FeatureStringsResourceProvider
 
-class MainActivity : ComponentActivity(), FeatureStringsResourceProvider {
+class MainActivity : ComponentActivity() {
+    val stringsResourceProvider = SportingStrings(this)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AppTheme(theme = SportingTheme()) {
-                FeatureScreen(stringsResourceProvider = this)
+                FeatureScreen(stringsResourceProvider = stringsResourceProvider)
             }
         }
-    }
-
-    override fun getButtonTitle(): String {
-        return this.getString(R.string.button_title)
     }
 }

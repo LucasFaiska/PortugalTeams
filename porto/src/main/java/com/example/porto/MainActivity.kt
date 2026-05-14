@@ -8,18 +8,17 @@ import com.example.core.AppTheme
 import com.example.feature.FeatureScreen
 import com.example.feature.FeatureStringsResourceProvider
 
-class MainActivity : ComponentActivity(), FeatureStringsResourceProvider {
+class MainActivity : ComponentActivity() {
+
+    val stringsResourceProvider = PortoStrings(this)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             AppTheme(theme = PortoTheme()) {
-                FeatureScreen(stringsResourceProvider = this)
+                FeatureScreen(stringsResourceProvider = stringsResourceProvider)
             }
         }
-    }
-
-    override fun getButtonTitle(): String {
-        return this.getString(R.string.button_title)
     }
 }

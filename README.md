@@ -1,92 +1,87 @@
-# PortugalTeams — Whitelabel Multi-Theming
+# PortugalTeams — Whitelabel Multi-Theming Architecture Lab
 
-A system design laboratory for Whitelabel Apps in Jetpack Compose. This repository demonstrates a composable, tenant-agnostic theming architecture using Portuguese football clubs as the domain example.
+System Design laboratory for Whitelabel Apps in Jetpack Compose. This repository demonstrates a tenant-agnostic theme architecture using Portuguese football clubs as a domain example.
 
 ## The Architectural Problem
 
-Scaling UI across multiple tenants is a structural problem, not just a styling problem.
+Scaling the user interface for multiple clients is a structural engineering problem, not just a styling issue.
 
-- UI becomes tightly coupled to tenant-specific rules when color and layout decisions are embedded in the screen layer.
-- The classic escalation is `if/else` branching across components, screens, and themes, which creates spaghetti logic.
-- Tenant-specific copywriting and labeling compounds the problem: the Compose tree should not need to know whether a user is on Benfica, Porto, or Sporting.
-- The result is low testability, poor reuse, and a maintenance burden that grows faster than the number of clients.
+- Coupling: UI becomes dependent on client-specific rules when color and layout decisions are fixed within the view layer.
+- Conditional Logic: Using if/else or when blocks to check for the active client inside components creates hard-to-maintain code.
+- Copywriting: The Compose code should not need to know whether the user is in the Benfica, Porto, or Sporting environment to decide which text to display.
 
-## The Solution
+## The Solution: Double Contract Injection
 
-This repository enforces a strict separation between feature UI and tenant branding.
+The architecture enforces a separation between feature UI and client branding through two main injection points:
 
-- `PortugalTeamsTheme` defines the theme contract.
-- Tenant modules implement the contract in concrete theme classes like `BenficaTheme`, `PortoTheme`, and `SportingTheme`.
-- `AppTheme` injects the active tenant's tokens using `CompositionLocalProvider`.
-- Feature UI consumes styling via `LocalThemeColors`.
-- String resources are abstracted with `FeatureStringsResourceProvider`, so Compose only depends on a string contract and not on tenant identity.
+- Theme Engine: Defines the design contract (colors and tokens) via PortugalTeamsTheme and injects it through CompositionLocal.
+- String Engine: Abstracts text resources through FeatureStringsResourceProvider, removing direct dependence on R.string within the UI layer.
 
-This eliminates theme coupling and tenant-specific copy logic from the Compose layer.
-
-### Architecture Diagram
+## Architecture Diagram
 
 ```mermaid
 flowchart LR
-    A[MainActivity] -->|1. Injects| B{Theme Engine<br>CompositionLocal}
-    A -->|2. Implements| C{String Contract}
+    subgraph Themes
+        T1[BenficaTheme]
+        T2[PortoTheme]
+        T3[SportingTheme]
+    end
 
-    subgraph Tenants
-        T1[Benfica]
-        T2[Porto]
-        T3[Sporting]
+    subgraph StringProviders
+        S1[BenficaStrings]
+        S2[PortoStrings]
+        S3[SportingStrings]
     end
 
     T1 & T2 & T3 -.-> B
+    S1 & S2 & S3 -.-> C
 
-    B ==>|Provides Tokens| UI[Agnostic Feature UI]
-    C ==>|Provides Text| UI
+    B{"Theme Engine<br/>(CompositionLocal)"} ==>|"Provides Tokens"| UI["Agnostic UI Layer<br/>(FeatureScreen)"]
+    C{"String Provider<br/>(Interface Contract)"} ==>|"Provides Text"| UI
 ```
 
-## Code Snippets
+## Technical Implementation
 
-### Root-level Theme and String Provider Injection
+### Contract Implementation (Example: Porto)
 
-```kotlin
-setContent {
-    AppTheme(theme = BenficaTheme()) {
-        FeatureScreen(stringsResourceProvider = this)
-    }
-}
-```
-
-### Theme Provider Implementation (CompositionLocal)
+Tenant-specific details are isolated within their own contract implementations.
 
 ```kotlin
-@Composable
-fun AppTheme(theme: PortugalTeamsTheme, content: @Composable () -> Unit) {
-    MaterialTheme
-
-    CompositionLocalProvider(
-        LocalThemeColors provides theme.colors,
-        content = content
+// Theme Contract Implementation
+class PortoTheme : PortugalTeamsTheme {
+    override val colors: CustomColors = CustomColors(
+        background = Color.White,
+        buttonColor = Color(0xFF004B87),
+        buttonTextColor = Color.White
     )
 }
+
+// String Contract Implementation (in separate file)
+class PortoStrings(val context: Context) : FeatureStringsResourceProvider {
+    override fun getButtonTitle(): String = context.getString(R.string.button_title)
+}
 ```
 
-### Agnostic Composable Consumption
+### Orchestration at UI Layer
+
+The UI layer handles injection, decoupled from MainActivity. The string provider is instantiated in the composable scope, not as a class field in the Activity.
 
 ```kotlin
-@Composable
-fun FeatureScreen(modifier: Modifier = Modifier, stringsResourceProvider: FeatureStringsResourceProvider) {
-    val backgroundColor = LocalThemeColors.current.background
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .background(color = backgroundColor),
-        contentAlignment = Alignment.Center,
-    ) {
-        PortugalTeamsButton(onClick = { }, text = stringsResourceProvider.getButtonTitle())
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val stringsResourceProvider = PortoStrings(this@MainActivity)
+            AppTheme(theme = PortoTheme()) {
+                FeatureScreen(stringsResourceProvider = stringsResourceProvider)
+            }
+        }
     }
 }
 ```
 
-## Why This Matters
+## Pattern Benefits
 
-This repository is intentionally strict about architectural boundaries. By treating theming as a token injection layer and string resources as an external contract, the Compose layer remains pure and reusable, while tenant-specific variance is confined to the theme provider and Activity boundary.
+- Framework Independence: UI logic is agnostic and can be tested or ported without carrying specific tenant dependencies.
+- Scalability: Adding a new client requires only implementing the theme and string contracts, without changes to the feature code.
+- Technical Purism: Zero conditional branding logic within Composables.
