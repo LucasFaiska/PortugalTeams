@@ -27,7 +27,7 @@ This eliminates theme coupling and tenant-specific copy logic from the Compose l
 
 ```mermaid
 flowchart LR
-    A[MainActivity] -->|injects| B[AppTheme(theme)]
+    A[MainActivity] -->|injects| B["AppTheme(theme)"]
     A -->|implements| J[FeatureStringsResourceProvider]
     B --> C[CompositionLocalProvider]
     C --> D[LocalThemeColors]
@@ -35,11 +35,13 @@ flowchart LR
     J --> E
     E -->|reads tokens| F[PortugalTeamsButton]
     E -->|reads copy| G[FeatureScreen]
+    
     subgraph Tenant Modules
         H[BenficaTheme]
         I[PortoTheme]
         K[SportingTheme]
     end
+    
     H --> B
     I --> B
     K --> B
